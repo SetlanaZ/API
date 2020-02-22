@@ -4,6 +4,7 @@ import sys
 import requests
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtCore import Qt
 
 SCREEN_SIZE = [600, 450]
 cord_x = 37.622504
@@ -12,12 +13,28 @@ z = 12
 
 
 class Example(QWidget):
+
     def __init__(self):
         super().__init__()
-        self.getImage()
         self.initUI()
+        self.getImage()
+
+    def keyPressEvent(self, event):
+        global z
+        if event.key() == Qt.Key_PageUp:
+            if z < 19:
+                z += 1
+
+                self.getImage()
+
+        if event.key() == Qt.Key_PageDown:
+            if z > 2:
+                z -= 1
+
+                self.getImage()
 
     def getImage(self):
+        global z
         map_request = f"http://static-maps.yandex.ru/1.x/?l=map&ll={cord_x},{cord_y}&z={z}"
         response = requests.get(map_request)
 
@@ -31,17 +48,20 @@ class Example(QWidget):
         self.map_file = "map.png"
         with open(self.map_file, "wb") as file:
             file.write(response.content)
+        self.pixmap = QPixmap(self.map_file)
+        self.image.setPixmap(self.pixmap)
+        self.image.repaint()
+
+
 
     def initUI(self):
         self.setGeometry(100, 100, *SCREEN_SIZE)
         self.setWindowTitle('Отображение карты')
 
         ## Изображение
-        self.pixmap = QPixmap(self.map_file)
         self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.resize(600, 450)
-        self.image.setPixmap(self.pixmap)
 
     def closeEvent(self, event):
         """При закрытии формы подчищаем за собой"""
